@@ -29,7 +29,7 @@ export class InputFilterComponent extends DefaultFilter implements OnInit {
     this.inputControl.valueChanges
       .skip(1)
       .distinctUntilChanged()
-      .debounceTime(this.delay)
+      .debounceTime(1000)
       .subscribe((value: string) => this.setFilter());
   }
 }
