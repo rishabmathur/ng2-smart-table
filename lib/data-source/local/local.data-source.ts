@@ -212,6 +212,14 @@ export class LocalDataSource extends DataSource {
     return this.pagingConf;
   }
 
+  getAllConf(): any {
+    return {
+      filter: this.filterConf,
+      sort: this.sortConf,
+      paging: this.pagingConf
+    };
+  }
+
   protected prepareData(data: Array<any>): Array<any> {
     data = this.filter(data);
     data = this.sort(data);

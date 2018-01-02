@@ -14,6 +14,7 @@ export abstract class DataSource {
   abstract getFilter(): any;
   abstract getPaging(): any;
   abstract count(): number;
+  abstract getAllConf(): any;
 
   refresh() {
     this.emitOnChanged('refresh');
