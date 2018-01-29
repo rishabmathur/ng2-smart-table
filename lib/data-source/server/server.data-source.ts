@@ -12,9 +12,8 @@ import 'rxjs/add/operator/toPromise';
 export class ServerDataSource extends LocalDataSource {
 
   protected conf: ServerSourceConf;
-
   protected lastRequestCount: number = 0;
-
+  protected extras: any;
   constructor(protected http: Http, conf: ServerSourceConf | {} = {}) {
     super();
 
@@ -29,11 +28,14 @@ export class ServerDataSource extends LocalDataSource {
     return this.lastRequestCount;
   }
 
+  getAllCustomResponseData(){
+    return this.extras;
+  }
+
   getElements(): Promise<any> {
     return this.requestElements().map(res => {
       this.lastRequestCount = this.extractTotalFromResponse(res);
       this.data = this.extractDataFromResponse(res);
-
       return this.data;
     }).toPromise();
   }
@@ -45,6 +47,9 @@ export class ServerDataSource extends LocalDataSource {
    */
   protected extractDataFromResponse(res: any): Array<any> {
     const rawData = res.json();
+    if("data" in rawData && "extras" in rawData.data){
+      this.extras = rawData.data.extras;
+    }
     const data = !!this.conf.dataKey ? getDeepFromObject(rawData, this.conf.dataKey, []) : rawData;
 
     if (data instanceof Array) {
@@ -74,13 +79,13 @@ export class ServerDataSource extends LocalDataSource {
     return this.http.get(this.conf.endPoint, this.createRequestOptions());
   }
 
-  protected createRequestOptions(): RequestOptionsArgs {
+  protected createRequestOptions( isReport = 0 ,fname = '' , extrafilters = '' ): RequestOptionsArgs {
     let requestOptions: RequestOptionsArgs = {};
     requestOptions.params = new URLSearchParams();
 
     requestOptions = this.addSortRequestOptions(requestOptions);
     requestOptions = this.addFilterRequestOptions(requestOptions);
-    return this.addPagerRequestOptions(requestOptions);
+    return this.addPagerRequestOptions(requestOptions , isReport , fname , extrafilters);
   }
 
   protected addSortRequestOptions(requestOptions: RequestOptionsArgs): RequestOptionsArgs {
@@ -110,14 +115,38 @@ export class ServerDataSource extends LocalDataSource {
     return requestOptions;
   }
 
-  protected addPagerRequestOptions(requestOptions: RequestOptionsArgs): RequestOptionsArgs {
+  protected addPagerRequestOptions(requestOptions: RequestOptionsArgs , isReport = 0 , fname = '' , extrafilters = ''): RequestOptionsArgs {
     const searchParams: URLSearchParams = <URLSearchParams>requestOptions.params;
 
-    if (this.pagingConf && this.pagingConf['page'] && this.pagingConf['perPage']) {
+    if (this.pagingConf && this.pagingConf['page'] && this.pagingConf['perPage'] && isReport == 0 ) {
       searchParams.set(this.conf.pagerPageKey, this.pagingConf['page']);
       searchParams.set(this.conf.pagerLimitKey, this.pagingConf['perPage']);
     }
 
+    if( isReport == 1 ){
+      var count: string|number  = ""+9999999;
+      var adminInfoObject = JSON.parse(localStorage.getItem("currentUser"));
+      searchParams.set("export", "true");
+      searchParams.set("emailId", adminInfoObject.email);
+      searchParams.set("fname", fname);
+      searchParams.set("count", count  );
+      var extrafiltersJson = JSON.parse(extrafilters);
+      if( ("fromDate" in extrafiltersJson) && ("toDate" in extrafiltersJson) && extrafiltersJson.fromDate != '' && extrafiltersJson.toDate != '' ){
+        let dateFilter = extrafiltersJson.fromDate;
+        if (extrafiltersJson.toDate) {
+          dateFilter += '||' + extrafiltersJson.toDate;
+        }
+        searchParams.set("created_on", dateFilter);
+      }
+    }
+
     return requestOptions;
+  }
+
+
+  // call api to export data for report generation
+  callApiToExportData( dataSet:any ): Observable<any> {
+    console.log(dataSet.url)
+    return this.http.get(dataSet.url , this.createRequestOptions(1 , dataSet.fname , JSON.stringify(dataSet)));
   }
 }
