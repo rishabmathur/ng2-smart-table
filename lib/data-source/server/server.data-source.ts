@@ -72,7 +72,7 @@ export class ServerDataSource extends LocalDataSource {
    * @returns {any}
    */
   protected extractTotalFromResponse(res: any): number {
-    this.showLoader = false;
+    setTimeout(() => this.showLoader = false, 0);
     if (res.headers.has(this.conf.totalKey)) {
       return +res.headers.get(this.conf.totalKey);
     } else {
@@ -91,7 +91,7 @@ export class ServerDataSource extends LocalDataSource {
 
     requestOptions = this.addSortRequestOptions(requestOptions);
     requestOptions = this.addFilterRequestOptions(requestOptions);
-    this.showLoader = true;
+    setTimeout(() => this.showLoader = true, 0);
     return this.addPagerRequestOptions(requestOptions , isReport , fname , extrafilters);
   }
 
