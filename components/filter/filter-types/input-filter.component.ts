@@ -12,6 +12,7 @@ import { DefaultFilter } from './default-filter';
     <input [(ngModel)]="query"
            [ngClass]="inputClass"
            [formControl]="inputControl"
+           (keydown.enter)="OnEnterSetFilter($event)"
            class="form-control"
            type="text"
            placeholder="{{ column.title }}" />
@@ -26,10 +27,14 @@ export class InputFilterComponent extends DefaultFilter implements OnInit {
   }
 
   ngOnInit() {
-    this.inputControl.valueChanges
-      .skip(1)
-      .distinctUntilChanged()
-      .debounceTime(1000)
-      .subscribe((value: string) => this.setFilter());
+    // this.inputControl.valueChanges
+    //   .skip(1)
+    //   .distinctUntilChanged()
+    //   .debounceTime(1000)
+    //   .subscribe((value: string) => this.setFilter());
+  }
+
+  OnEnterSetFilter(event:any) {
+     this.setFilter();
   }
 }

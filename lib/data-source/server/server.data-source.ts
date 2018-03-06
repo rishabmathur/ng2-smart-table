@@ -14,6 +14,7 @@ export class ServerDataSource extends LocalDataSource {
   protected conf: ServerSourceConf;
   protected lastRequestCount: number = 0;
   protected extras: any;
+  protected showLoader = false;
   constructor(protected http: Http, conf: ServerSourceConf | {} = {}) {
     super();
 
@@ -26,6 +27,10 @@ export class ServerDataSource extends LocalDataSource {
 
   count(): number {
     return this.lastRequestCount;
+  }
+
+  showloader(): boolean {
+    return !this.showLoader;
   }
 
   getAllCustomResponseData(){
@@ -67,6 +72,7 @@ export class ServerDataSource extends LocalDataSource {
    * @returns {any}
    */
   protected extractTotalFromResponse(res: any): number {
+    this.showLoader = false;
     if (res.headers.has(this.conf.totalKey)) {
       return +res.headers.get(this.conf.totalKey);
     } else {
@@ -85,6 +91,7 @@ export class ServerDataSource extends LocalDataSource {
 
     requestOptions = this.addSortRequestOptions(requestOptions);
     requestOptions = this.addFilterRequestOptions(requestOptions);
+    this.showLoader = true;
     return this.addPagerRequestOptions(requestOptions , isReport , fname , extrafilters);
   }
 
